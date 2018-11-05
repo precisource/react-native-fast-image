@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import {
-    Platform,
     View,
     Image,
     NativeModules,
@@ -10,26 +9,7 @@ import {
     StyleSheet,
 } from 'react-native'
 
-const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource')
-
 const FastImageViewNativeModule = NativeModules.FastImageView
-
-const useLocalImage = source => {
-    // No source.
-    if (!source) return true
-    // No uri.
-    if (!source.uri) return true
-    // Is a local Android image.
-    if (source.uri.startsWith('file://')) return true
-    // Content URI.
-    if (source.uri.startsWith('content://')) return true
-    // Smart album.
-    if (source.uri.startsWith('photos://')) return true
-    // From asset library / camera roll.
-    if (source.uri.startsWith('assets-library://')) return true
-    // We have a remote source.
-    return false
-}
 
 class FastImage extends Component {
     setNativeProps(nativeProps) {
@@ -48,30 +28,35 @@ class FastImage extends Component {
             onLoadEnd,
             style,
             children,
+            fallback,
             ...props
         } = this.props
 
-        // If there's no source or source uri just fallback to Image.
-        if (useLocalImage(source)) {
+        const resolvedSource = Image.resolveAssetSource(source)
+
+        if (fallback) {
             return (
-                <Image
+                <View
+                    style={[styles.imageContainer, style]}
                     ref={this.captureRef}
-                    {...props}
-                    style={style}
-                    source={source}
-                    onLoadStart={onLoadStart}
-                    onProgress={onProgress}
-                    onLoad={onLoad}
-                    onError={onError}
-                    onLoadEnd={onLoadEnd}
-                />
+                >
+                    <FastImageView
+                        {...props}
+                        style={StyleSheet.absoluteFill}
+                        source={resolvedSource}
+                        onLoadStart={onLoadStart}
+                        onProgress={onProgress}
+                        onLoad={onLoad}
+                        onError={onError}
+                        onLoadEnd={onLoadEnd}
+                    />
+                    {children}
+                </View>
             )
         }
 
-        const resolvedSource = resolveAssetSource(source)
-
         return (
-            <View style={[style, styles.imageContainer]} ref={this.captureRef}>
+            <View style={[styles.imageContainer, style]} ref={this.captureRef}>
                 <FastImageView
                     {...props}
                     style={StyleSheet.absoluteFill}
@@ -82,9 +67,7 @@ class FastImage extends Component {
                     onFastImageError={onError}
                     onFastImageLoadEnd={onLoadEnd}
                 />
-                {children && (
-                    <View style={StyleSheet.absoluteFill}>{children}</View>
-                )}
+                {children}
             </View>
         )
     }
@@ -104,9 +87,21 @@ FastImage.resizeMode = {
 }
 
 FastImage.priority = {
+    // lower than usual.
     low: 'low',
+    // normal, the default.
     normal: 'normal',
+    // higher than usual.
     high: 'high',
+}
+
+FastImage.cacheControl = {
+    // Ignore headers, use uri as cache key, fetch only if not in cache.
+    immutable: 'immutable',
+    // Respect http headers, no aggressive caching.
+    web: 'web',
+    // Only load from cache.
+    cacheOnly: 'cacheOnly',
 }
 
 FastImage.preload = sources => {
@@ -121,6 +116,7 @@ const FastImageSourcePropType = PropTypes.shape({
     uri: PropTypes.string,
     headers: PropTypes.objectOf(PropTypes.string),
     priority: PropTypes.oneOf(Object.keys(FastImage.priority)),
+    cache: PropTypes.oneOf(Object.keys(FastImage.cacheControl)),
 })
 
 FastImage.propTypes = {
@@ -131,6 +127,7 @@ FastImage.propTypes = {
     onLoad: PropTypes.func,
     onError: PropTypes.func,
     onLoadEnd: PropTypes.func,
+    fallback: PropTypes.bool,
 }
 
 const FastImageView = requireNativeComponent('FastImageView', FastImage, {

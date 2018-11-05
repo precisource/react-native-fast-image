@@ -5,21 +5,16 @@ exports[`FastImage renders correctly. 1`] = `
   style={
     Array [
       Object {
-        "height": 44,
-        "width": 44,
+        "overflow": "hidden",
       },
       Object {
-        "overflow": "hidden",
+        "height": 44,
+        "width": 44,
       },
     ]
   }
 >
   <FastImageView
-    onFastImageError={undefined}
-    onFastImageLoad={undefined}
-    onFastImageLoadEnd={undefined}
-    onFastImageLoadStart={undefined}
-    onFastImageProgress={undefined}
     resizeMode="cover"
     source={
       Object {
@@ -44,23 +39,35 @@ exports[`FastImage renders correctly. 1`] = `
 `;
 
 exports[`Renders a normal Image when not passed a uri. 1`] = `
-<Image
-  onError={undefined}
-  onLoad={undefined}
-  onLoadEnd={undefined}
-  onLoadStart={undefined}
-  onProgress={undefined}
-  resizeMode="cover"
-  source={
-    Object {
-      "testUri": "../../../react-native-fast-image-example-server/pictures/jellyfish.gif",
-    }
-  }
+<View
   style={
-    Object {
-      "height": 44,
-      "width": 44,
-    }
+    Array [
+      Object {
+        "overflow": "hidden",
+      },
+      Object {
+        "height": 44,
+        "width": 44,
+      },
+    ]
   }
-/>
+>
+  <FastImageView
+    resizeMode="cover"
+    source={
+      Object {
+        "testUri": "../../../react-native-fast-image-example-server/pictures/jellyfish.gif",
+      }
+    }
+    style={
+      Object {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  />
+</View>
 `;

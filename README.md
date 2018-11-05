@@ -66,7 +66,7 @@ and
 yarn add react-native-fast-image
 
 # Automatic linking. (other linking methods listed below)
-react-native link
+react-native link react-native-fast-image
 ```
 
 ```jsx
@@ -121,9 +121,17 @@ Headers to load the image with. e.g. `{ Authorization: 'someAuthToken' }`.
 
 ### `source.priority?: enum`
 
-- `FastImage.priority.low` - Low Priority
-- `FastImage.priority.normal` **(Default)** - Normal Priority
-- `FastImage.priority.high` - High Priority
+- `FastImage.priority.low` - Low Priority.
+- `FastImage.priority.normal` **(Default)** - Normal Priority.
+- `FastImage.priority.high` - High Priority.
+
+---
+
+### `source.cache?: enum`
+
+- `FastImage.cacheControl.immutable` - **(Default)** - Only updates if url changes.
+- `FastImage.cacheControl.web` - Use headers and follow normal caching procedures.
+- `FastImage.cacheControl.cacheOnly` - Only show images from cache, do not make any network requests.
 
 ---
 
@@ -173,6 +181,13 @@ Called when the image finishes loading, whether it was successful or an error.
 ### `style`
 
 A React Native style. Supports using `borderRadius`.
+
+---
+
+### `fallback: boolean`
+
+If true will fallback to using `Image`.
+In this case the image will still be styled and laid out the same way as `FastImage`.
 
 ## Static Methods
 

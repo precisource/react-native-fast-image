@@ -11,13 +11,13 @@ import com.bumptech.glide.annotation.GlideModule;
 import com.bumptech.glide.integration.okhttp3.OkHttpUrlLoader;
 import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.module.LibraryGlideModule;
-
 import com.facebook.react.modules.network.OkHttpClientProvider;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
@@ -34,6 +34,8 @@ import okio.Source;
 @GlideModule
 public class FastImageOkHttpProgressGlideModule extends LibraryGlideModule {
 
+    private static DispatchingProgressListener progressListener = new DispatchingProgressListener();
+
     @Override
     public void registerComponents(
             @NonNull Context context,
@@ -43,7 +45,7 @@ public class FastImageOkHttpProgressGlideModule extends LibraryGlideModule {
         OkHttpClient client = OkHttpClientProvider
                 .getOkHttpClient()
                 .newBuilder()
-                .addInterceptor(createInterceptor(new DispatchingProgressListener()))
+                .addInterceptor(createInterceptor(progressListener))
                 .build();
         OkHttpUrlLoader.Factory factory = new OkHttpUrlLoader.Factory(client);
         registry.replace(GlideUrl.class, InputStream.class, factory);
@@ -65,11 +67,11 @@ public class FastImageOkHttpProgressGlideModule extends LibraryGlideModule {
     }
 
     static void forget(String key) {
-        DispatchingProgressListener.forget(key);
+        progressListener.forget(key);
     }
 
     static void expect(String key, FastImageProgressListener listener) {
-        DispatchingProgressListener.expect(key, listener);
+        progressListener.expect(key, listener);
     }
 
     private interface ResponseProgressListener {
@@ -77,8 +79,8 @@ public class FastImageOkHttpProgressGlideModule extends LibraryGlideModule {
     }
 
     private static class DispatchingProgressListener implements ResponseProgressListener {
-        private static final Map<String, FastImageProgressListener> LISTENERS = new HashMap<>();
-        private static final Map<String, Long> PROGRESSES = new HashMap<>();
+        private final Map<String, FastImageProgressListener> LISTENERS = new WeakHashMap<>();
+        private final Map<String, Long> PROGRESSES = new HashMap<>();
 
         private final Handler handler;
 
@@ -86,12 +88,12 @@ public class FastImageOkHttpProgressGlideModule extends LibraryGlideModule {
             this.handler = new Handler(Looper.getMainLooper());
         }
 
-        static void forget(String key) {
+        void forget(String key) {
             LISTENERS.remove(key);
             PROGRESSES.remove(key);
         }
 
-        static void expect(String key, FastImageProgressListener listener) {
+        void expect(String key, FastImageProgressListener listener) {
             LISTENERS.put(key, listener);
         }
 
